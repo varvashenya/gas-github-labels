@@ -18,6 +18,8 @@ To make it run automatically:
 3. Choose the function to run and set the event source to **Time-driven**.
 4. Set your preferred schedule (e.g., every hour or once a day).
 
+![How to setup cron](gas-cron.jpg)
+
 ## License
 
 Licensed under the Apache License, Version 2.0.
