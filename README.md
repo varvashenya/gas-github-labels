@@ -30,6 +30,11 @@ To make it run automatically:
 
 ![How to setup cron](gas-cron.jpg)
 
+### 📧 Gmail Inbox Result
+This is how your inbox will look with automatic repository and status labels:
+
+![Gmail Label Preview](gas-gmail.jpg)
+
 ## 🛠️ Logic Details
 
 The script scans emails from the last hour and analyzes hidden technical headers:
