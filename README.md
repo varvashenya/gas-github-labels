@@ -12,6 +12,7 @@ A lightweight, zero-dependency automation tool built on Google Apps Script to sy
     * `Approved by me`
     * `Requested changes by me`
 * **Dynamic Repository Discovery:** Automatically detects and creates labels for new repositories as you receive notifications.
+* **Persistent Styling:** Once a label is created, you can change its color in Gmail, and the script will preserve your choice as long as the label exists.
 
 ## 🚀 How to Use
 
