@@ -1,16 +1,16 @@
 /**
  * Scans recent emails for GitHub Pull Request headers and body content to apply labels.
  * Designed to run on a time-based trigger (e.g., every 5-10 minutes).
- * 
+ *
  * Source & Bug Reports: https://github.com/varvashenya/gas-github-labels/issues
  */
 function markGitHubPullRequests() {
    // Look back 1 hour to ensure no messages are missed.
    const threads = GmailApp.search('newer_than:1h');
- 
- 
+
   // Define label paths using forward slashes for nesting (folder/label)
   const ROOT_LABELS = {
+    GITHUB: "GitHub",
     CLOSED: "GitHub/Closed",
     CLOSED_BY_ME: "GitHub/Closed by me",
     MERGED: "GitHub/Merged",
@@ -24,7 +24,7 @@ function markGitHubPullRequests() {
   const RE_STATUS_MERGED = /X-GitHub-PullRequestStatus:\s*merged/i;
   const RE_REASON_ACTIVITY = /X-GitHub-Reason:\s*your_activity/i;
   const RE_LIST_ARCHIVE = /List-Archive:\s*https:\/\/github\.com\/([^\s>]+)/i;
-  
+
   // Regex for body content
   const RE_BODY_APPROVED = /approved this pull request/i;
   const RE_BODY_CHANGES = /requested changes on this pull request/i;
@@ -39,7 +39,7 @@ function markGitHubPullRequests() {
     const thread = threads[i];
     const messages = thread.getMessages();
     const lastMessage = messages[messages.length - 1];
-    
+
     const rawContent = lastMessage.getRawContent();
     const bodyContent = lastMessage.getPlainBody();
     const currentLabels = thread.getLabels().map(l => l.getName());
@@ -48,6 +48,13 @@ function markGitHubPullRequests() {
     // 1. Handle dynamic Company/Repo label
     const archiveMatch = rawContent.match(RE_LIST_ARCHIVE);
     if (archiveMatch && archiveMatch[1]) {
+      // Add root "GitHub" label
+      if (!currentLabels.includes(ROOT_LABELS.GITHUB)) {
+        thread.addLabel(rootLabelObjects.GITHUB);
+        console.log(`GITHUB: Added [${ROOT_LABELS.GITHUB}] to "${subject}"`);
+      }
+
+      // Add dynamic repo label
       const repoPath = "GitHub/" + archiveMatch[1].replace(/\/$/, "");
       if (!currentLabels.includes(repoPath)) {
         const repoLabel = GmailApp.getUserLabelByName(repoPath) || GmailApp.createLabel(repoPath);
@@ -57,7 +64,7 @@ function markGitHubPullRequests() {
     }
 
     // 2. Process original Status labels (Root folder)
-    
+
     // Status: CLOSED
     if (RE_STATUS_CLOSED.test(rawContent)) {
       if (!currentLabels.includes(ROOT_LABELS.CLOSED)) {
@@ -69,7 +76,7 @@ function markGitHubPullRequests() {
         console.log(`ACTIVITY: Added [${ROOT_LABELS.CLOSED_BY_ME}] to "${subject}"`);
       }
     }
-    
+
     // Status: MERGED
     if (RE_STATUS_MERGED.test(rawContent)) {
       if (!currentLabels.includes(ROOT_LABELS.MERGED)) {
