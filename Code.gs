@@ -12,17 +12,17 @@ function markGitHubPullRequests() {
   const ROOT_LABELS = {
     GITHUB: "GitHub",
     CLOSED: "GitHub/Closed",
-    CLOSED_BY_ME: "GitHub/Closed by me",
     MERGED: "GitHub/Merged",
+    CLOSED_BY_ME: "GitHub/Closed by me",
     MERGED_BY_ME: "GitHub/Merged by me",
-    APPROVED: "GitHub/Approved by me",
-    CHANGES: "GitHub/Requested changes by me"
+    APPROVED_BY_ME: "GitHub/Approved by me",
+    CHANGES_BY_ME: "GitHub/Requested changes by me"
   };
 
   // Regex for headers
   const RE_STATUS_CLOSED = /X-GitHub-PullRequestStatus:\s*closed/i;
   const RE_STATUS_MERGED = /X-GitHub-PullRequestStatus:\s*merged/i;
-  const RE_REASON_ACTIVITY = /X-GitHub-Reason:\s*your_activity/i;
+  const RE_REASON_YOUR_ACTIVITY = /X-GitHub-Reason:\s*your_activity/i;
   const RE_LIST_ARCHIVE = /List-Archive:\s*https:\/\/github\.com\/([^\s>]+)/i;
 
   // Regex for body content
@@ -58,6 +58,7 @@ function markGitHubPullRequests() {
     const bodyContent = lastMessage.getPlainBody();
     const currentLabelsSet = new Set(thread.getLabels().map(l => l.getName()));
     const subject = lastMessage.getSubject();
+    const isYourActivity = RE_REASON_YOUR_ACTIVITY.test(rawContent);
 
     // 1. Handle dynamic Company/Repo label
     const archiveMatch = rawContent.match(RE_LIST_ARCHIVE);
@@ -85,7 +86,7 @@ function markGitHubPullRequests() {
         thread.addLabel(rootLabelObjects.CLOSED);
         console.log(`STATUS: Added [${ROOT_LABELS.CLOSED}] to "${subject}"`);
       }
-      if (RE_REASON_ACTIVITY.test(rawContent) && !currentLabelsSet.has(ROOT_LABELS.CLOSED_BY_ME)) {
+      if (isYourActivity && !currentLabelsSet.has(ROOT_LABELS.CLOSED_BY_ME)) {
         thread.addLabel(rootLabelObjects.CLOSED_BY_ME);
         console.log(`ACTIVITY: Added [${ROOT_LABELS.CLOSED_BY_ME}] to "${subject}"`);
       }
@@ -97,21 +98,21 @@ function markGitHubPullRequests() {
         thread.addLabel(rootLabelObjects.MERGED);
         console.log(`STATUS: Added [${ROOT_LABELS.MERGED}] to "${subject}"`);
       }
-      if (RE_REASON_ACTIVITY.test(rawContent) && !currentLabelsSet.has(ROOT_LABELS.MERGED_BY_ME)) {
+      if (isYourActivity && !currentLabelsSet.has(ROOT_LABELS.MERGED_BY_ME)) {
         thread.addLabel(rootLabelObjects.MERGED_BY_ME);
         console.log(`ACTIVITY: Added [${ROOT_LABELS.MERGED_BY_ME}] to "${subject}"`);
       }
     }
 
-    // 3. Process original Activity labels (Root folder)
-    if (RE_REASON_ACTIVITY.test(rawContent)) {
-      if (RE_BODY_APPROVED.test(bodyContent) && !currentLabelsSet.has(ROOT_LABELS.APPROVED)) {
-        thread.addLabel(rootLabelObjects.APPROVED);
-        console.log(`REVIEW: Added [${ROOT_LABELS.APPROVED}] to "${subject}"`);
+    if (isYourActivity) {
+      if (RE_BODY_APPROVED.test(bodyContent) && !currentLabelsSet.has(ROOT_LABELS.APPROVED_BY_ME)) {
+        thread.addLabel(rootLabelObjects.APPROVED_BY_ME);
+        console.log(`REVIEW: Added [${ROOT_LABELS.APPROVED_BY_ME}] to "${subject}"`);
       }
-      if (RE_BODY_CHANGES.test(bodyContent) && !currentLabelsSet.has(ROOT_LABELS.CHANGES)) {
-        thread.addLabel(rootLabelObjects.CHANGES);
-        console.log(`REVIEW: Added [${ROOT_LABELS.CHANGES}] to "${subject}"`);
+
+      if (RE_BODY_CHANGES.test(bodyContent) && !currentLabelsSet.has(ROOT_LABELS.CHANGES_BY_ME)) {
+        thread.addLabel(rootLabelObjects.CHANGES_BY_ME);
+        console.log(`REVIEW: Added [${ROOT_LABELS.CHANGES_BY_ME}] to "${subject}"`);
       }
     }
   }
